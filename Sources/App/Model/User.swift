@@ -23,7 +23,7 @@ final class User: Model, Content {
     var password: String
     
     @Field(key: "currency")
-    var currency: String
+    var currency: String?
     
     @Field(key: "admin")
     var admin: Bool?
@@ -36,5 +36,19 @@ final class User: Model, Content {
         self.password = password
         self.currency = currency
         self.admin = admin
+    }
+}
+
+struct LoginUser: Content {
+    var id: UUID?
+    var name: String
+    var currency: String?
+    var admin: Bool
+    
+    init(from user: User) {
+        id = user.id
+        name = user.name
+        currency = user.currency
+        admin = user.admin ?? false
     }
 }

@@ -13,7 +13,7 @@ func routes(_ app: Application) throws {
     
     //MARK: Users
     ///Create user
-    ///`{ "name": String, "password": String, "currency": String }`
+    ///`{ "name": String, "password": String }`
     apis.on(.POST, "user") { req async throws -> String in
         let user = try req.content.decode(User.self)
         
@@ -41,5 +41,16 @@ func routes(_ app: Application) throws {
     apis.on(.GET, "user") { req async throws -> [User] in
         let users = try await User.query(on: req.db).all()
         return users
+    }
+    
+    //MARK: Login
+    apis.post("login") { req async throws -> LoginUser in
+        let loginUser = try req.content.decode(User.self)
+        guard let existUser = try await User.query(on: req.db).filter(\.$name == loginUser.name).first(),
+              loginUser.password == existUser.password else {
+            throw MoneyErrors.loginFailed
+        }
+        
+        return LoginUser(from: existUser)
     }
 }

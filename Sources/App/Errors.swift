@@ -14,4 +14,6 @@ class MoneyErrors {
     static func duplicatedUser(_ name: String) -> Abort {
         Abort(.conflict, reason: "Username '\(name)' is already taken.")
     }
+
+    static let loginFailed = Abort(.unauthorized, reason: "Invalid username or password")
 }
