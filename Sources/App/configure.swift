@@ -19,11 +19,3 @@ public func configure(_ app: Application) async throws {
     
     try routes(app)
 }
-//
-//func createUserTable() async  {
-//    try await database.schema("planets")
-//        .id()
-//        .field("name", .string, .required)
-//        .field("star_id", .uuid, .required, .references("stars", "id"))
-//        .create()
-//}

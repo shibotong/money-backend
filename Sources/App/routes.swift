@@ -16,14 +16,11 @@ func routes(_ app: Application) throws {
     ///`{ "name": String, "password": String }`
     apis.on(.POST, "user") { req async throws -> String in
         let user = try req.content.decode(User.self)
+        let newDB = try await User.query(on: req.db).count() == 0
+        user.admin = newDB
         
-        let existUsers = try await User.query(on: req.db).all()
-        user.admin = existUsers.isEmpty
-        
-        for existUser in existUsers {
-            if existUser.name == user.name {
-                throw MoneyErrors.duplicatedUser(user.name)
-            }
+        if !newDB, try await User.query(on: req.db).filter(\.$name == user.name).first() != nil {
+            throw MoneyErrors.duplicatedUser(user.name)
         }
 
         try await user.create(on: req.db)
@@ -33,11 +30,15 @@ func routes(_ app: Application) throws {
         return userID.description
     }
     
-    ///Get all users
-    apis.on(.GET, "user") { req async throws -> [User] in
-        let users = try await User.query(on: req.db).all()
-        return users
-    }
+//    ///Get all users
+//    apis.on(.GET, "user", ":id") { req async throws -> User in
+//        guard let userID = req.parameters.get("id") else {
+//            
+//        }
+//        
+//        let user = try await User.query(on: req.db).
+//        return users
+//    }
     
     //MARK: Login
     apis.post("login") { req async throws -> LoginUser in
