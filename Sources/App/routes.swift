@@ -17,16 +17,12 @@ func routes(_ app: Application) throws {
     apis.on(.POST, "user") { req async throws -> String in
         let user = try req.content.decode(User.self)
         
-        var checkAdmin = user.admin ?? false
         let existUsers = try await User.query(on: req.db).all()
+        user.admin = existUsers.isEmpty
         
         for existUser in existUsers {
             if existUser.name == user.name {
                 throw MoneyErrors.duplicatedUser(user.name)
-            }
-            
-            if checkAdmin, existUser.admin == true {
-                throw MoneyErrors.multipleAdminUser
             }
         }
 
