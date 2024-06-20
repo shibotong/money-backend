@@ -5,7 +5,7 @@
 //  Created by Shibo Tong on 20/6/2024.
 //
 
-import Foundation
+import Vapor
 
 @MainActor
 let currencies: [Currency] = [
@@ -14,7 +14,7 @@ let currencies: [Currency] = [
     Currency(code: "CNY", denominator: 100, name: "Chinese Yuan")
 ]
 
-struct Currency: Sendable, Codable {
+struct Currency: Sendable, Content {
     let code: String
     let denominator: Int
     let name: String
