@@ -31,23 +31,15 @@ func routes(_ app: Application) throws {
     
     ///Get all currencies
     apis.get("currencies") { req async throws -> String in
-        let currencies = await currencies
-        var response: [[String: Any]] = []
-        for currency in currencies {
-            var result: [String: Any] = [:]
-            result["name"] = currency.name
-            result["code"] = currency.code
-            result["demolinator"] = currency.demolinator
-            response.append(result)
-        }
-        return try jsonResponse(response)
+        return try jsonResponse(await currencies)
     }
 }
 
-func jsonResponse(_ dict: [Any]) throws -> String {
-    let jsonData = try JSONSerialization.data(withJSONObject: dict, options: .prettyPrinted)
-    // here "jsonData" is the dictionary encoded in JSON data
+func jsonResponse(_ dict: Codable) throws -> String {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .prettyPrinted
     
+    let jsonData = try encoder.encode(dict)
     guard let jsonString = String(data: jsonData, encoding: .utf8) else {
         throw MoneyError.jsonEncodeError
     }
