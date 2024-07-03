@@ -3,6 +3,10 @@ import Fluent
 
 func routes(_ app: Application) throws {
     
+    app.get("hello") { req async throws -> String in
+        return "hello world!"
+    }
+    
     // MARK: - API routes
     let apis = app.grouped("api")
     
@@ -14,7 +18,7 @@ func routes(_ app: Application) throws {
     //MARK: Users
     ///Create user
     ///`{ "name": String, "password": String }`
-    apis.on(.POST, "user") { req async throws -> String in
+    apis.on(.POST, "users") { req async throws -> String in
         let user = try req.content.decode(User.self)
         let newDB = try await User.query(on: req.db).count() == 0
         user.admin = newDB
@@ -28,6 +32,18 @@ func routes(_ app: Application) throws {
             throw MoneyErrors.failedCreateUser
         }
         return userID.description
+    }
+    
+    ///Get single user based on ID
+    apis.on(.GET, "user", ":userid") { req async throws -> User in
+        guard let userid = req.parameters.get("userid") else {
+            throw MoneyErrors.notFound
+        }
+        
+        guard let user = try await User.query(on: req.db).filter(\.$id == UUID(uuidString: userid)!).first() else {
+            throw MoneyErrors.notFound
+        }
+        return user
     }
     
 //    ///Get all users

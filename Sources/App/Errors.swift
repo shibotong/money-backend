@@ -16,4 +16,5 @@ class MoneyErrors {
     }
 
     static let loginFailed = Abort(.unauthorized, reason: "Invalid username or password")
+    static let notFound = Abort(.notFound, reason: "User not found")
 }

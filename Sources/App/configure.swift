@@ -10,12 +10,25 @@ public func configure(_ app: Application) async throws {
     
     let configuration = SQLPostgresConfiguration(hostname: "localhost",
                                                  port: 5432,
-                                                 username: "money_app",
-                                                 password: "money_app",
-                                                 database: "money-app",
+                                                 username: "shibotong",
+                                                 password: nil,
+                                                 database: "shibotong",
                                                  tls: .disable)
     
     app.databases.use(.postgres(configuration: configuration), as: .psql)
-    
+    let postgresql = app.db(.psql) as! PostgresDatabase
+    try await initService(postgresql)
     try routes(app)
+}
+
+public func initService(_ postgres: PostgresDatabase) async throws {
+    _ = try await postgres.simpleQuery("""
+                            CREATE TABLE IF NOT EXISTS users (
+                                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                name VARCHAR(100) NOT NULL,
+                                password VARCHAR(100) NOT NULL,
+                                currency VARCHAR(3),
+                                admin BOOLEAN NOT NULL DEFAULT false
+                            )
+                            """).get()
 }
