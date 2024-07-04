@@ -17,7 +17,7 @@ final class AppTests: XCTestCase {
     var app: Application!
     var databaseName: String!
     var databaseId: DatabaseID { DatabaseID(string: databaseName) }
-    var username: String!
+    var dbUserName: String!
     
     override func setUp() async throws {
         self.app = try await Application.make(.testing)
@@ -26,16 +26,16 @@ final class AppTests: XCTestCase {
         
         let postgres = app.db(.psql) as! PostgresDatabase
         
-        username = "testuser_\(String.random(length: 10))"
+        dbUserName = "testuser_\(String.random(length: 10))"
         let password = "password_\(String.random(length: 10))"
         
-        _ = try await postgres.simpleQuery("CREATE USER \(username!) WITH PASSWORD '\(password)'").get()
+        _ = try await postgres.simpleQuery("CREATE USER \(dbUserName!) WITH PASSWORD '\(password)'").get()
         _ = try await postgres.simpleQuery("CREATE DATABASE \(databaseName!)").get()
-        _ = try await postgres.simpleQuery("ALTER DATABASE \(databaseName!) OWNER TO \(username!)").get()
+        _ = try await postgres.simpleQuery("ALTER DATABASE \(databaseName!) OWNER TO \(dbUserName!)").get()
         
         let configuration = SQLPostgresConfiguration(hostname: "localhost",
                                                      port: SQLPostgresConfiguration.ianaPortNumber,
-                                                     username: username,
+                                                     username: dbUserName,
                                                      password: password,
                                                      database: databaseName,
                                                      tls: .disable)
@@ -59,8 +59,8 @@ final class AppTests: XCTestCase {
         let postgres = clearDatabaseApp.db(.psql) as! PostgresDatabase
         _ = try await postgres.simpleQuery("DROP DATABASE \(databaseName!)").get()
         print("Drop database \(databaseName!)")
-        _ = try await postgres.simpleQuery("DROP USER IF EXISTS \(username!)").get()
-        print("Drop user \(username!)")
+        _ = try await postgres.simpleQuery("DROP USER IF EXISTS \(dbUserName!)").get()
+        print("Drop user \(dbUserName!)")
         try await clearDatabaseApp.asyncShutdown()
         
         self.app = nil
@@ -75,25 +75,68 @@ final class AppTests: XCTestCase {
     
     func testUser() async throws {
         
-        var username = "testusername"
-        var password = "testpassword"
+        let username1 = "username1"
+        let password1 = "password1"
         
-        var userid: String!
+        let username2 = "username2"
+        let password2 = "password2"
         
-        // Create user
+        var userid1: String!
+        var userid2: String!
+        
+        // Create user 1
         try await self.app.test(.POST, "api/users", beforeRequest: { req in
-            try req.content.encode(["name": username, "password": password])
-        }, afterResponse: { res async in
+            try req.content.encode(["name": username1, "password": password1])
+        }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
-            userid = res.body.string
+            let user = try res.content.decode(LoginUser.self)
+            XCTAssertTrue(user.admin)
+            XCTAssertEqual(user.name, username1)
+            XCTAssertNotNil(user.id)
+            userid1 = user.id!.description
         })
         
-        // login
-        try await self.app.test(.POST, "api/login", beforeRequest: { req in
-            try req.content.encode(["name": username, "password": password])
-        }, afterResponse: { res async in
+        // Create user 2
+        try await self.app.test(.POST, "api/users", beforeRequest: { req in
+            try req.content.encode(["name": username2, "password": password2])
+        }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(userid, res.body.string)
+            let user = try res.content.decode(LoginUser.self)
+            XCTAssertFalse(user.admin)
+            XCTAssertEqual(user.name, username2)
+            XCTAssertNotNil(user.id)
+            userid2 = user.id!.description
         })
+        
+        // login with fail password
+        try await self.app.test(.POST, "api/login", beforeRequest: { req in
+            try req.content.encode(["name": username1, "password": "wrongpassword"])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .unauthorized)
+        })
+        
+        // login user 1
+        try await self.app.test(.POST, "api/login", beforeRequest: { req in
+            try req.content.encode(["name": username1, "password": password1])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let user = try res.content.decode(LoginUser.self)
+            XCTAssertEqual(userid1, user.id?.description)
+            XCTAssertTrue(user.admin)
+            XCTAssertEqual(user.name, username1)
+        })
+        
+        // login user 2
+        try await self.app.test(.POST, "api/login", beforeRequest: { req in
+            try req.content.encode(["name": username2, "password": password2])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let user = try res.content.decode(LoginUser.self)
+            XCTAssertEqual(userid2, user.id?.description)
+            XCTAssertFalse(user.admin)
+            XCTAssertEqual(user.name, username2)
+        })
+        
+        
     }
 }
