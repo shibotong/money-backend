@@ -32,11 +32,6 @@ final class AppTests: XCTestCase {
         _ = try await postgres.simpleQuery("CREATE USER \(username!) WITH PASSWORD '\(password)'").get()
         _ = try await postgres.simpleQuery("CREATE DATABASE \(databaseName!)").get()
         _ = try await postgres.simpleQuery("ALTER DATABASE \(databaseName!) OWNER TO \(username!)").get()
-//        _ = try await postgres.simpleQuery("GRANT ALL PRIVILEGES ON DATABASE \(databaseName!) to \(username!)").get()
-//        _ = try await postgres.simpleQuery("GRANT ALL ON SCHEMA public TO EXAMPLE_USER").get()
-//        _ = postgres.simpleQuery("CREATE USER \(username!) WITH PASSWORD '\(password)'")
-//        _ = postgres.simpleQuery("CREATE DATABASE \(databaseName!)")
-//        _ = postgres.simpleQuery("GRANT ALL PRIVILEGES ON DATABASE \(databaseName!) to \(username!)")
         
         let configuration = SQLPostgresConfiguration(hostname: "localhost",
                                                      port: SQLPostgresConfiguration.ianaPortNumber,
@@ -79,17 +74,26 @@ final class AppTests: XCTestCase {
     }
     
     func testUser() async throws {
+        
+        var username = "testusername"
+        var password = "testpassword"
+        
         var userid: String!
         
+        // Create user
         try await self.app.test(.POST, "api/users", beforeRequest: { req in
-            try req.content.encode(["name": "testuser", "password": "testpassword"])
+            try req.content.encode(["name": username, "password": password])
         }, afterResponse: { res async in
             XCTAssertEqual(res.status, .ok)
             userid = res.body.string
         })
         
-        try await self.app.test(.GET, "api/user/\(userid!)") { res async in
-            XCTAssertEqual(res.body.string, "")
-        }
+        // login
+        try await self.app.test(.POST, "api/login", beforeRequest: { req in
+            try req.content.encode(["name": username, "password": password])
+        }, afterResponse: { res async in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(userid, res.body.string)
+        })
     }
 }

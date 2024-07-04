@@ -17,4 +17,8 @@ class MoneyErrors {
 
     static let loginFailed = Abort(.unauthorized, reason: "Invalid username or password")
     static let notFound = Abort(.notFound, reason: "User not found")
+    
+    static func fatalError(_ message: String) -> Abort {
+        Abort(.badRequest, reason: message)
+    }
 }

@@ -10,6 +10,8 @@ func routes(_ app: Application) throws {
     // MARK: - API routes
     let apis = app.grouped("api")
     
+    try apis.register(collection: UserController())
+    
     //MARK: Currencies
     apis.get("currencies") { req async throws -> [Currency] in
         return await currencies
@@ -34,18 +36,6 @@ func routes(_ app: Application) throws {
         return userID.description
     }
     
-    ///Get single user based on ID
-    apis.on(.GET, "user", ":userid") { req async throws -> User in
-        guard let userid = req.parameters.get("userid") else {
-            throw MoneyErrors.notFound
-        }
-        
-        guard let user = try await User.query(on: req.db).filter(\.$id == UUID(uuidString: userid)!).first() else {
-            throw MoneyErrors.notFound
-        }
-        return user
-    }
-    
 //    ///Get all users
 //    apis.on(.GET, "user", ":id") { req async throws -> User in
 //        guard let userID = req.parameters.get("id") else {
@@ -57,13 +47,17 @@ func routes(_ app: Application) throws {
 //    }
     
     //MARK: Login
-    apis.post("login") { req async throws -> LoginUser in
+    apis.post("login") { req async throws -> String in
         let loginUser = try req.content.decode(User.self)
         guard let existUser = try await User.query(on: req.db).filter(\.$name == loginUser.name).first(),
               loginUser.password == existUser.password else {
             throw MoneyErrors.loginFailed
         }
         
-        return LoginUser(from: existUser)
+        guard let userid = existUser.id else {
+            throw MoneyErrors.fatalError("No id for user \(loginUser.name)")
+        }
+        
+        return userid.description
     }
 }
