@@ -29,7 +29,7 @@ public func initService(_ postgres: PostgresDatabase) async throws {
                                 password VARCHAR(100) NOT NULL,
                                 currency VARCHAR(3),
                                 admin BOOLEAN NOT NULL DEFAULT false,
-                                deleted BOOLEAN NOT NULL DEFAULT false
+                                deleted_at TIMESTAMP
                             )
                             """).get()
 }

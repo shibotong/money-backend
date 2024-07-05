@@ -59,7 +59,7 @@ final class UserTests: XCTestCase {
             let result = res.body.string.dictionaryValue
             XCTAssertEqual(result["username"] as? String, username)
             XCTAssertEqual(result["admin"] as? Bool, true)
-            XCTAssertEqual(result["deleted"] as? Bool, false)
+            XCTAssertNil(result["deletedAt"])
         }
         
         // fetch user 2
@@ -67,7 +67,7 @@ final class UserTests: XCTestCase {
             let result = res.body.string.dictionaryValue
             XCTAssertEqual(result["username"] as? String, username2)
             XCTAssertEqual(result["admin"] as? Bool, false)
-            XCTAssertEqual(result["deleted"] as? Bool, false)
+            XCTAssertNil(result["deletedAt"])
         }
     }
     
@@ -112,19 +112,11 @@ final class UserTests: XCTestCase {
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok, "Non admin user should be able to delete self")
         })
-        try await self.app.test(.GET, "api/users/\(userID)", afterResponse: { res async throws in
-            let result = res.body.string.dictionaryValue
-            XCTAssertEqual(result["deleted"] as? Bool, true)
-        })
-        
+
         try await self.app.test(.DELETE, "api/users/\(userID2)", beforeRequest: { req in
             try req.content.encode(["operatorid": userid])
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok, "Admin user should be able to delete other user")
-        })
-        try await self.app.test(.GET, "api/users/\(userID)", afterResponse: { res async throws in
-            let result = res.body.string.dictionaryValue
-            XCTAssertEqual(result["deleted"] as? Bool, true)
         })
         
         // delete admin

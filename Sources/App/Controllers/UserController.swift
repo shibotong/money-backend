@@ -52,11 +52,16 @@ struct UserController: RouteCollection {
         
         let user = try await findUser(id: uuid, req: req)
         
-        let result: [String: Any] = ["username": user.username, "admin": user.admin, "deleted": user.deleted]
+        var result: [String: Any] = ["username": user.username, "admin": user.admin]
+        if let deletedAt = user.deletedAt {
+            result["deletedAt"] = deletedAt
+        }
         return try jsonString(result)
     }
 
-//    func update(req: Request) async throws -> Todo {
+//    ///Update password
+//    ///`{ "original": String, "new": String }`
+//    @Sendable func update(req: Request) async throws -> String {
 //        guard let todo = try await Todo.find(req.parameters.get("id"), on: req.db) else {
 //            throw Abort(.notFound)
 //        }
@@ -98,8 +103,7 @@ struct UserController: RouteCollection {
         guard operatorUser.admin == true || operatorid == deletionID else {
             throw Abort(.unauthorized, reason: "You don't have permisson to delete user.")
         }
-        deletionUser.deleted = true
-        try await deletionUser.save(on: req.db)
+        try await deletionUser.delete(on: req.db)
         return .ok
     }
         

@@ -28,31 +28,16 @@ final class User: Model, Content {
     @Field(key: "admin")
     var admin: Bool
     
-    @Field(key: "deleted")
-    var deleted: Bool
+    @Timestamp(key: "deleted_at", on: .delete)
+    var deletedAt: Date?
     
     init() {}
     
-    init(id: UUID? = nil, username: String, password: String, currency: String = "USD", admin: Bool = false, deleted: Bool = false) {
+    init(id: UUID? = nil, username: String, password: String, currency: String = "USD", admin: Bool = false) {
         self.id = id
         self.username = username
         self.password = password
         self.currency = currency
         self.admin = admin
-        self.deleted = deleted
-    }
-}
-
-struct LoginUser: Content {
-    var id: UUID?
-    var username: String
-    var currency: String?
-    var admin: Bool
-    
-    init(from user: User) {
-        id = user.id
-        username = user.username
-        currency = user.currency
-        admin = user.admin ?? false
     }
 }
