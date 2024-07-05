@@ -29,7 +29,7 @@ extension String {
     }
 }
 
-final class AppTests: XCTestCase {
+final class UserTests: XCTestCase {
     var app: Application!
     var databaseName: String!
     var databaseId: DatabaseID { DatabaseID(string: databaseName) }
