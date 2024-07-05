@@ -11,6 +11,22 @@ extension String {
       let letters = "abcdefghijklmnopqrstuvwxyz0123456789"
       return String((0..<length).map { _ in letters.randomElement()! })
     }
+    
+    var dictionaryValue: [String: Any] {
+        if let jsonData = self.data(using: .utf8) {
+            do {
+                if let dictionary = try JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
+                    return dictionary
+                } else {
+                    return [:]
+                }
+            } catch {
+                return [:]
+            }
+        } else {
+            return [:]
+        }
+    }
 }
 
 final class AppTests: XCTestCase {
@@ -86,57 +102,52 @@ final class AppTests: XCTestCase {
         
         // Create user 1
         try await self.app.test(.POST, "api/users", beforeRequest: { req in
-            try req.content.encode(["name": username1, "password": password1])
+            try req.content.encode(["username": username1, "password": password1])
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
-            let user = try res.content.decode(LoginUser.self)
-            XCTAssertTrue(user.admin)
-            XCTAssertEqual(user.name, username1)
-            XCTAssertNotNil(user.id)
-            userid1 = user.id!.description
+            XCTAssertFalse(res.body.string.isEmpty)
+            userid1 = res.body.string
         })
         
         // Create user 2
         try await self.app.test(.POST, "api/users", beforeRequest: { req in
-            try req.content.encode(["name": username2, "password": password2])
+            try req.content.encode(["username": username2, "password": password2])
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
-            let user = try res.content.decode(LoginUser.self)
-            XCTAssertFalse(user.admin)
-            XCTAssertEqual(user.name, username2)
-            XCTAssertNotNil(user.id)
-            userid2 = user.id!.description
+            XCTAssertFalse(res.body.string.isEmpty)
+            userid2 = res.body.string
         })
         
-        // login with fail password
+        // login with wrong password
         try await self.app.test(.POST, "api/login", beforeRequest: { req in
-            try req.content.encode(["name": username1, "password": "wrongpassword"])
+            try req.content.encode(["username": username1, "password": "wrongpassword"])
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .unauthorized)
         })
         
-        // login user 1
+        // login with correct password
         try await self.app.test(.POST, "api/login", beforeRequest: { req in
-            try req.content.encode(["name": username1, "password": password1])
+            try req.content.encode(["username": username1, "password": password1])
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
-            let user = try res.content.decode(LoginUser.self)
-            XCTAssertEqual(userid1, user.id?.description)
-            XCTAssertTrue(user.admin)
-            XCTAssertEqual(user.name, username1)
+            XCTAssertEqual(userid1, res.body.string)
         })
         
-        // login user 2
-        try await self.app.test(.POST, "api/login", beforeRequest: { req in
-            try req.content.encode(["name": username2, "password": password2])
-        }, afterResponse: { res async throws in
-            XCTAssertEqual(res.status, .ok)
-            let user = try res.content.decode(LoginUser.self)
-            XCTAssertEqual(userid2, user.id?.description)
-            XCTAssertFalse(user.admin)
-            XCTAssertEqual(user.name, username2)
-        })
+        // fetch user 1
+        try await self.app.test(.GET, "api/users/\(userid1!)") { res async throws in
+            let result = res.body.string.dictionaryValue
+            XCTAssertEqual(result["username"] as! String, username1)
+            XCTAssertEqual(result["admin"] as! Bool, true)
+            XCTAssertEqual(result["deleted"] as! Bool, false)
+        }
         
+        // fetch user 2
+        try await self.app.test(.GET, "api/users/\(userid2!)") { res async throws in
+            let result = res.body.string.dictionaryValue
+            XCTAssertEqual(result["username"] as! String, username2)
+            XCTAssertEqual(result["admin"] as! Bool, false)
+            XCTAssertEqual(result["deleted"] as! Bool, false)
+        }
         
     }
 }

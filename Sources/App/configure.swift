@@ -25,10 +25,11 @@ public func initService(_ postgres: PostgresDatabase) async throws {
     _ = try await postgres.simpleQuery("""
                             CREATE TABLE IF NOT EXISTS users (
                                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                name VARCHAR(100) NOT NULL,
+                                username VARCHAR(100) NOT NULL,
                                 password VARCHAR(100) NOT NULL,
                                 currency VARCHAR(3),
-                                admin BOOLEAN NOT NULL DEFAULT false
+                                admin BOOLEAN NOT NULL DEFAULT false,
+                                deleted BOOLEAN NOT NULL DEFAULT false
                             )
                             """).get()
 }

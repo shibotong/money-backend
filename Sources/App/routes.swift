@@ -19,12 +19,17 @@ func routes(_ app: Application) throws {
     }
     
     //MARK: Login
-    apis.post("login") { req async throws -> LoginUser in
-        let loginUser = try req.content.decode(User.self)
-        guard let existUser = try await User.query(on: req.db).filter(\.$name == loginUser.name).first(),
-              loginUser.password == existUser.password else {
-            throw MoneyErrors.loginFailed
+    ///Login
+    ///`{ "username": String, "password": String }`
+    apis.post("login") { req async throws -> String in
+        guard let username: String = req.content["username"],
+              let password: String = req.content["password"],
+              let existUser = try await User.query(on: req.db).filter(\.$username == username).first(),
+              password == existUser.password,
+              let userid = existUser.id?.uuidString else {
+            throw Abort(.unauthorized, reason: "Invalid username or password")
         }
-        return LoginUser(from: existUser)
+        
+        return userid
     }
 }
