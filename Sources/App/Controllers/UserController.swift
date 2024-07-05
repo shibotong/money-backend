@@ -72,7 +72,7 @@ struct UserController: RouteCollection {
     ///Delete operation is soft delete
     ///`{ "operatorid": String }`
     @Sendable func delete(req: Request) async throws -> HTTPStatus {
-        guard let operatorid: String = req.query["operatorid"] else {
+        guard let operatorid: String = req.content["operatorid"] else {
             throw Abort(.unauthorized, reason: "An operator id is required for delete operation")
         }
         
@@ -90,6 +90,10 @@ struct UserController: RouteCollection {
         
         let operatorUser = try await findUser(id: operatorUUID, req: req)
         let deletionUser = try await findUser(id: deletionUUID, req: req)
+        
+        guard !deletionUser.admin else {
+            throw Abort(.badRequest, reason: "Admin user cannot be deleted")
+        }
         
         guard operatorUser.admin == true || operatorid == deletionID else {
             throw Abort(.unauthorized, reason: "You don't have permisson to delete user.")

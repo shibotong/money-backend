@@ -87,4 +87,61 @@ final class UserTests: XCTestCase {
             XCTAssertEqual(userid, res.body.string)
         })
     }
+    
+    func testDelete() async throws {
+        guard let userID = try await createUser(username: "deleteUser", password: "deletePass"),
+              let userID2 = try await createUser(username: "deleteUser2", password: "deletePass2") else {
+            XCTFail()
+            return
+        }
+        
+        try await self.app.test(.DELETE, "api/users/\(userID2)", beforeRequest: { req in
+            try req.content.encode(["operatorid": userID])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .unauthorized, "Non admin user is not authorized to delete other user")
+        })
+        
+        try await self.app.test(.DELETE, "api/users/FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF", beforeRequest: { req in
+            try req.content.encode(["operatorid": userid!])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .notFound, "Delete user not found")
+        })
+        
+        try await self.app.test(.DELETE, "api/users/\(userID)", beforeRequest: { req in
+            try req.content.encode(["operatorid": userID])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok, "Non admin user should be able to delete self")
+        })
+        try await self.app.test(.GET, "api/users/\(userID)", afterResponse: { res async throws in
+            let result = res.body.string.dictionaryValue
+            XCTAssertEqual(result["deleted"] as? Bool, true)
+        })
+        
+        try await self.app.test(.DELETE, "api/users/\(userID2)", beforeRequest: { req in
+            try req.content.encode(["operatorid": userid])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok, "Admin user should be able to delete other user")
+        })
+        try await self.app.test(.GET, "api/users/\(userID)", afterResponse: { res async throws in
+            let result = res.body.string.dictionaryValue
+            XCTAssertEqual(result["deleted"] as? Bool, true)
+        })
+        
+        // delete admin
+        try await self.app.test(.DELETE, "api/users/\(userid!)", beforeRequest: { req in
+            try req.content.encode(["operatorid": userid!])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .badRequest, "Admin user is not able to be deleted")
+        })
+    }
+                                
+    private func createUser(username: String, password: String) async throws -> String? {
+        var userID: String?
+        try await self.app.test(.POST, "api/users", beforeRequest: { req in
+            try req.content.encode(["username": username, "password": password])
+        }, afterResponse: { res async throws in
+            userID = res.body.string
+        })
+        return userID
+    }
 }
