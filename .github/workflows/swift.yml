@@ -16,8 +16,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: install postgresql
-      run: brew install postgresql@16
+    - name: Setup PostgreSQL
+      uses: ikalnytskyi/action-setup-postgres@v6 
+      with: 
+        username: money-backend
+        password: money-backend
+        database: money-backend
+        port: 5432
+      id: postgres
     - name: Build
       run: swift build -v
     - name: Run tests
