@@ -25,11 +25,11 @@ struct SubCategoryController: RouteCollection {
         let userid = try req.auth.require(User.self).id
         guard let categoryIDString = req.parameters.get("categoryid"),
               let subCategoryName: String = req.content["name"] else {
-            throw Abort(.badRequest, reason: "Userid or category name should not be empty")
+            throw Abort(.badRequest, reason: "subcategory name should not be empty")
         }
         
         guard isValidName(subCategoryName) else {
-            throw Abort(.badRequest, reason: "category name is not valid")
+            throw Abort(.badRequest, reason: "subcategory name is not valid")
         }
         
         guard let categoryID = Int(categoryIDString),
