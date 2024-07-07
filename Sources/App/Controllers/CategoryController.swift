@@ -8,14 +8,18 @@
 import Foundation
 import Vapor
 import PostgresNIO
+import Fluent
 
-///This controller contains all routes related to user, including create, update, delete users
+///This controller contains all routes related to category, including create, update, delete users
 struct CategoryController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let categories = routes.grouped("category")
         categories.post(use: create)
-        categories.group(":categoryid") { category in
+        categories.get(use: show)
+        try categories.group(":categoryid") { category throws in
             category.put(use: update)
+            category.get(use: showSingle)
+            try category.register(collection: SubCategoryController())
         }
     }
     
@@ -71,6 +75,35 @@ struct CategoryController: RouteCollection {
         
         category.name = updatedCategory.name
         try await category.save(on: req.db)
+        return category
+    }
+    
+    @Sendable func show(req: Request) async throws -> [Category] {
+        guard let useridString = req.parameters.get("id"),
+              let userid = UUID(uuidString: useridString) else {
+            throw Abort(.badRequest, reason: "Userid is needed for this endpoint")
+        }
+        
+        let categories = try await Category.query(on: req.db).filter(\.$userid == userid).with(\.$subCategories).all()
+        return categories
+    }
+    
+    @Sendable func showSingle(req: Request) async throws -> Category {
+        guard let useridString = req.parameters.get("id"),
+              let userid = UUID(uuidString: useridString),
+              let categoryIDString = req.parameters.get("categoryid"),
+              let categoryID = Int(categoryIDString) else {
+            throw Abort(.badRequest)
+        }
+        
+        guard let category = try await Category.find(categoryID, on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        guard category.userid == userid else {
+            throw Abort(.unauthorized)
+        }
+        
         return category
     }
     

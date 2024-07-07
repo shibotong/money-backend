@@ -35,8 +35,6 @@ final class CategoryTests: XCTestCase {
         }, afterResponse: { res async throws in
             userid = res.body.string
         })
-        
-        try await self.app.test(.POST, "pi/users/\(userid!)/category")
     }
 
     override func tearDown() async throws {
@@ -66,7 +64,7 @@ final class CategoryTests: XCTestCase {
     
     func testUpdate() async throws {
         let updatedName = "updatedname"
-        guard let categoryID = try await createCategory(userid!, updatedName) else {
+        guard let categoryID = try await createCategory(userid!, "categoryName") else {
             XCTFail()
             return
         }
@@ -89,6 +87,32 @@ final class CategoryTests: XCTestCase {
         try await updateCategory(userid!, categoryID, "  ") { res in
             XCTAssertEqual(res.status, .badRequest)
         }
+    }
+    
+    func testRead() async throws {
+        let categoryName1 = "testcategory1"
+        let categoryName2 = "testcategory2"
+        guard let categoryID = try await createCategory(userid!, categoryName1) else {
+            XCTFail()
+            return
+        }
+        
+        guard let categoryID2 = try await createCategory(userid!, categoryName2) else {
+            XCTFail()
+            return
+        }
+        
+        try await self.app.test(.GET, "api/users/\(userid!)/category") { res async throws in
+            let categories = try res.content.decode([App.Category].self)
+            XCTAssertEqual(categories.count, 2)
+        }
+        
+        try await self.app.test(.GET, "api/users/\(userid!)/category/\(categoryID)") { res async throws in
+            let category = try res.content.decode(App.Category.self)
+            XCTAssertEqual(category.name, categoryName1)
+            XCTAssertEqual(category.userid?.uuidString, userid)
+        }
+        
     }
     
     @discardableResult

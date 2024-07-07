@@ -41,4 +41,14 @@ public func initService(_ postgres: PostgresDatabase) async throws {
                                             deleted_at TIMESTAMP
                                         )
                                         """).get()
+    
+    _ = try await postgres.simpleQuery("""
+                                        CREATE TABLE IF NOT EXISTS subcategory (
+                                            id SERIAL PRIMARY KEY,
+                                            name VARCHAR(255),
+                                            categoryid INTEGER,
+                                            FOREIGN KEY (categoryid) REFERENCES category(id),
+                                            deleted_at TIMESTAMP
+                                        )
+                                        """).get()
 }

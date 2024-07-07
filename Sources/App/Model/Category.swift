@@ -22,6 +22,9 @@ final class Category: Model, Content {
     @Field(key: "userid")
     var userid: UUID?
     
+    @Children(for: \.$category)
+    var subCategories: [SubCategory]
+    
     init() {}
     
     init(id: Int? = nil, name: String, userid: UUID? = nil) {
