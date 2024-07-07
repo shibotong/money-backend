@@ -46,6 +46,8 @@ struct CategoryController: RouteCollection {
     }
     
     @Sendable func update(req: Request) async throws -> Category {
+        let userid = try req.auth.require(User.self).id
+        
         guard let categoryIDString = req.parameters.get("categoryid") else {
             throw Abort(.badRequest, reason: "Category ID is need for update")
         }
@@ -58,10 +60,6 @@ struct CategoryController: RouteCollection {
             throw Abort(.notFound, reason: "Category with id \(categoryID) not found")
         }
         
-        guard let useridString = req.parameters.get("id"),
-              let userid = UUID(uuidString: useridString) else {
-            throw Abort(.badRequest, reason: "A userid is needed for update")
-        }
         let updatedCategory = try req.content.decode(Category.self)
         guard userid == category.userid else {
             throw Abort(.unauthorized, reason: "Only category owner can update the category name")

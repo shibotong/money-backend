@@ -94,36 +94,26 @@ final class UserTests: XCTestCase {
             return
         }
         
-        try await self.app.test(.DELETE, "api/users/\(userID2)", beforeRequest: { req in
-            try req.content.encode(["operatorid": userID])
-        }, afterResponse: { res async throws in
+        try await self.app.test(.DELETE, "api/users/\(userID2)", headers: authorization(token: userID)) { res async throws in
             XCTAssertEqual(res.status, .unauthorized, "Non admin user is not authorized to delete other user")
-        })
+        }
         
-        try await self.app.test(.DELETE, "api/users/\(fakeUserID)", beforeRequest: { req in
-            try req.content.encode(["operatorid": userid!])
-        }, afterResponse: { res async throws in
+        try await self.app.test(.DELETE, "api/users/\(fakeUserID)", headers: authorization(token: userid!)) { res async throws in
             XCTAssertEqual(res.status, .notFound, "Delete user not found")
-        })
+        }
         
-        try await self.app.test(.DELETE, "api/users/\(userID)", beforeRequest: { req in
-            try req.content.encode(["operatorid": userID])
-        }, afterResponse: { res async throws in
+        try await self.app.test(.DELETE, "api/users/\(userID)", headers: authorization(token: userID)) { res async throws in
             XCTAssertEqual(res.status, .ok, "Non admin user should be able to delete self")
-        })
+        }
 
-        try await self.app.test(.DELETE, "api/users/\(userID2)", beforeRequest: { req in
-            try req.content.encode(["operatorid": userid])
-        }, afterResponse: { res async throws in
+        try await self.app.test(.DELETE, "api/users/\(userID2)", headers: authorization(token: userid!)) { res async throws in
             XCTAssertEqual(res.status, .ok, "Admin user should be able to delete other user")
-        })
+        }
         
         // delete admin
-        try await self.app.test(.DELETE, "api/users/\(userid!)", beforeRequest: { req in
-            try req.content.encode(["operatorid": userid!])
-        }, afterResponse: { res async throws in
+        try await self.app.test(.DELETE, "api/users/\(userid!)", headers: authorization(token: userid!)) { res async throws in
             XCTAssertEqual(res.status, .badRequest, "Admin user is not able to be deleted")
-        })
+        }
     }
                                 
     private func createUser(username: String, password: String) async throws -> String? {

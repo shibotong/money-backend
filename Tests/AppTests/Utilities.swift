@@ -80,4 +80,8 @@ extension XCTestCase {
         _ = try await postgres.simpleQuery("DROP USER IF EXISTS \(username)").get()
         try await clearDatabaseApp.asyncShutdown()
     }
+    
+    func authorization(token: String) -> HTTPHeaders {
+        HTTPHeaders([("Authorization", "Bearer \(token)")])
+    }
 }

@@ -54,7 +54,7 @@ final class CategoryTests: XCTestCase {
         }
         
         try await createCategory(fakeUserID, categoryName) { res async throws in
-            XCTAssertEqual(res.status, .badRequest)
+            XCTAssertEqual(res.status, .unauthorized)
         }
         
         try await createCategory(userid!, "  ") { res async throws in
@@ -102,12 +102,12 @@ final class CategoryTests: XCTestCase {
             return
         }
         
-        try await self.app.test(.GET, "api/users/\(userid!)/category") { res async throws in
+        try await self.app.test(.GET, "api/category", headers: authorization(token: userid!)) { res async throws in
             let categories = try res.content.decode([App.Category].self)
             XCTAssertEqual(categories.count, 2)
         }
         
-        try await self.app.test(.GET, "api/users/\(userid!)/category/\(categoryID)") { res async throws in
+        try await self.app.test(.GET, "api/category/\(categoryID)", headers: authorization(token: userid!)) { res async throws in
             let category = try res.content.decode(App.Category.self)
             XCTAssertEqual(category.name, categoryName1)
             XCTAssertEqual(category.userid?.uuidString, userid)
@@ -118,7 +118,7 @@ final class CategoryTests: XCTestCase {
     @discardableResult
     private func createCategory(_ userid: String, _ name: String, testcases: ((XCTHTTPResponse) async throws -> ())? = nil) async throws -> Int? {
         var categoryID: Int?
-        try await self.app.test(.POST, "api/users/\(userid)/category", beforeRequest: { req in
+        try await self.app.test(.POST, "api/category", headers: authorization(token: userid), beforeRequest: { req in
             try req.content.encode(["name": name])
         }) { res async throws in
             try await testcases?(res)
@@ -130,7 +130,7 @@ final class CategoryTests: XCTestCase {
     }
     
     private func updateCategory(_ userid: String, _ categoryID: Int, _ name: String, _ testcases: (XCTHTTPResponse) throws -> ()) async throws {
-        try await self.app.test(.PUT, "api/users/\(userid)/category/\(categoryID)", beforeRequest: { req in
+        try await self.app.test(.PUT, "api/category/\(categoryID)", headers: authorization(token: userid), beforeRequest: { req in
             try req.content.encode(["name": name])
         }) { res async throws in
             try testcases(res)
