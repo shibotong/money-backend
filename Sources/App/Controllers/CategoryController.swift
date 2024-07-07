@@ -28,6 +28,10 @@ struct CategoryController: RouteCollection {
             throw Abort(.badRequest, reason: "Userid or category name should not be empty")
         }
         
+        guard isValidName(categoryName) else {
+            throw Abort(.badRequest, reason: "category name is not valid")
+        }
+        
         let category = Category(name: categoryName, userid: userid)
 
         do {
@@ -60,8 +64,17 @@ struct CategoryController: RouteCollection {
         guard userid == category.userid else {
             throw Abort(.unauthorized, reason: "Only category owner can update the category name")
         }
+        
+        guard isValidName(updatedCategory.name) else {
+            throw Abort(.badRequest, reason: "updated name is not valid")
+        }
+        
         category.name = updatedCategory.name
         try await category.save(on: req.db)
         return category
+    }
+    
+    private func isValidName(_ str: String) -> Bool {
+        return !str.isEmpty && !str.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
