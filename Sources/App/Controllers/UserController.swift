@@ -13,10 +13,10 @@ struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let users = routes.grouped("users")
         users.post(use: create)
-        users.group(":id") { user in
+        try users.group(":id") { user throws in
             user.get(use: show)
             user.delete(use: delete)
-            
+            try user.register(collection: CategoryController())
         }
     }
 

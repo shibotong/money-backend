@@ -13,18 +13,18 @@ final class Category: Model, Content {
     
     static let schema = "category"
     
-    @ID(key: .id)
-    var id: UUID?
+    @ID(custom: "id", generatedBy: .database)
+    var id: Int?
     
-    @Field(key: "category_name")
+    @Field(key: "name")
     var name: String
     
-    @Field(key: "user_id")
+    @Field(key: "userid")
     var userid: UUID
     
     init() {}
     
-    init(id: UUID? = nil, name: String, userid: UUID) {
+    init(id: Int? = nil, name: String, userid: UUID) {
         self.id = id
         self.name = name
         self.userid = userid

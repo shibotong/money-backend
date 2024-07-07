@@ -34,10 +34,10 @@ public func initService(_ postgres: PostgresDatabase) async throws {
                                         """).get()
     
     _ = try await postgres.simpleQuery("""
-                                        CREATE TABLE category (
+                                        CREATE TABLE IF NOT EXISTS category (
                                             id SERIAL PRIMARY KEY,
                                             name VARCHAR(255),
-                                            userid INT REFERENCES users(id),
+                                            userid UUID REFERENCES users(id),
                                             deleted_at TIMESTAMP
                                         )
                                         """).get()
