@@ -22,9 +22,8 @@ struct SubCategoryController: RouteCollection {
     ///Create category
     ///`{ "name": String }`
     @Sendable func create(req: Request) async throws -> SubCategory {
-        guard let useridString = req.parameters.get("id"),
-              let userid = UUID(uuidString: useridString),
-              let categoryIDString = req.parameters.get("categoryid"),
+        let userid = try req.auth.require(User.self).id
+        guard let categoryIDString = req.parameters.get("categoryid"),
               let subCategoryName: String = req.content["name"] else {
             throw Abort(.badRequest, reason: "Userid or category name should not be empty")
         }
