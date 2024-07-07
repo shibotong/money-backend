@@ -13,16 +13,18 @@ import PostgresNIO
 struct CategoryController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let categories = routes.grouped("category")
-        categories.group(":name") { category in
-            category.post(use: create)
+        categories.post(use: create)
+        categories.group(":categoryid") { category in
+            category.put(use: update)
         }
     }
     
     ///Create category
-    @Sendable func create(req: Request) async throws -> HTTPStatus {
+    ///`{ "name": String }`
+    @Sendable func create(req: Request) async throws -> Category {
         guard let useridString = req.parameters.get("id"),
               let userid = UUID(uuidString: useridString),
-              let categoryName = req.parameters.get("name") else {
+              let categoryName: String = req.content["name"] else {
             throw Abort(.badRequest, reason: "Userid or category name should not be empty")
         }
         
@@ -34,6 +36,32 @@ struct CategoryController: RouteCollection {
             throw Abort(.badRequest, reason: error.serverInfo?[.message])
         }
         
-        return .ok
+        return category
+    }
+    
+    @Sendable func update(req: Request) async throws -> Category {
+        guard let categoryIDString = req.parameters.get("categoryid") else {
+            throw Abort(.badRequest, reason: "Category ID is need for update")
+        }
+        
+        guard let categoryID = Int(categoryIDString) else {
+            throw Abort(.badRequest, reason: "Invalid category ID")
+        }
+        
+        guard let category = try await Category.find(categoryID, on: req.db) else {
+            throw Abort(.notFound, reason: "Category with id \(categoryID) not found")
+        }
+        
+        guard let useridString = req.parameters.get("id"),
+              let userid = UUID(uuidString: useridString) else {
+            throw Abort(.badRequest, reason: "A userid is needed for update")
+        }
+        let updatedCategory = try req.content.decode(Category.self)
+        guard userid == category.userid else {
+            throw Abort(.unauthorized, reason: "Only category owner can update the category name")
+        }
+        category.name = updatedCategory.name
+        try await category.save(on: req.db)
+        return category
     }
 }

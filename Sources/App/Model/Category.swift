@@ -20,11 +20,11 @@ final class Category: Model, Content {
     var name: String
     
     @Field(key: "userid")
-    var userid: UUID
+    var userid: UUID?
     
     init() {}
     
-    init(id: Int? = nil, name: String, userid: UUID) {
+    init(id: Int? = nil, name: String, userid: UUID? = nil) {
         self.id = id
         self.name = name
         self.userid = userid
