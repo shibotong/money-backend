@@ -10,9 +10,9 @@ public func configure(_ app: Application) async throws {
     
     let configuration = SQLPostgresConfiguration(hostname: "localhost",
                                                  port: 5432,
-                                                 username: "money-backend",
-                                                 password: "money-backend",
-                                                 database: "money-backend",
+                                                 username: "shibotong",
+                                                 password: nil,
+                                                 database: "shibotong",
                                                  tls: .disable)
     
     app.databases.use(.postgres(configuration: configuration), as: .psql)
