@@ -7,6 +7,7 @@
 
 import Foundation
 import Vapor
+import PostgresNIO
 
 ///This controller contains all routes related to user, including create, update, delete users
 struct CategoryController: RouteCollection {
@@ -27,7 +28,11 @@ struct CategoryController: RouteCollection {
         
         let category = Category(name: categoryName, userid: userid)
 
-        try await category.create(on: req.db)
+        do {
+            try await category.create(on: req.db)
+        } catch let error as PSQLError {
+            throw Abort(.badRequest, reason: error.serverInfo?[.message])
+        }
         
         return .ok
     }

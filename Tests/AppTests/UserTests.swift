@@ -13,7 +13,6 @@ final class UserTests: XCTestCase {
     var userid: String!
     
     override func setUp() async throws {
-        
         username = "username_\(String.random(length: 5))"
         password = "password_\(String.random(length: 5))"
         
@@ -101,7 +100,7 @@ final class UserTests: XCTestCase {
             XCTAssertEqual(res.status, .unauthorized, "Non admin user is not authorized to delete other user")
         })
         
-        try await self.app.test(.DELETE, "api/users/FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF", beforeRequest: { req in
+        try await self.app.test(.DELETE, "api/users/\(fakeUserID)", beforeRequest: { req in
             try req.content.encode(["operatorid": userid!])
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .notFound, "Delete user not found")

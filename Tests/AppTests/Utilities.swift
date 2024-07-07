@@ -38,6 +38,11 @@ extension String {
 }
 
 extension XCTestCase {
+    
+    var fakeUserID: String {
+        "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"
+    }
+    
     func setupDatabase(dbName: String, username: String, password: String) async throws-> Application {
         let app = try await Application.make(.testing)
         try await configure(app)
