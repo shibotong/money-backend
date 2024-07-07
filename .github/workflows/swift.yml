@@ -19,6 +19,7 @@ jobs:
     - name: Setup PostgreSQL
       uses: ikalnytskyi/action-setup-postgres@v6 
       with: 
+        postgres-version: 16
         username: money-backend
         password: money-backend
         database: money-backend
