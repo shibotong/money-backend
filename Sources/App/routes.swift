@@ -12,6 +12,7 @@ func routes(_ app: Application) throws {
     
     // register users endpoint
     try apis.register(collection: UserController())
+    try apis.register(collection: CategoryController())
     
     //MARK: Currencies
     apis.get("currencies") { req async throws -> [Currency] in

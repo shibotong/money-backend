@@ -13,15 +13,16 @@ struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let users = routes.grouped("users")
         users.post(use: create)
-        try users.group(":id") { user throws in
+        
+        try users.grouped(UserAuthenticator()).group(":id") { user throws in
             user.get(use: show)
             user.delete(use: delete)
-            try user.register(collection: CategoryController())
         }
     }
 
     ///Create user
     ///`{ "username": String, "password": String }`
+    ///`POST: /api/users`
     @Sendable func create(req: Request) async throws -> String {
         guard let username: String = req.content["username"], let password: String = req.content["password"] else {
             throw Abort(.badRequest, reason: "Username or password should not be empty")
@@ -72,35 +73,26 @@ struct UserController: RouteCollection {
 //    }
 
     ///Delete a user based on userid
-    ///Should pass the operator id in body
     ///Only admin user or user self can delete user
     ///Delete operation is soft delete
-    ///`{ "operatorid": String }`
     @Sendable func delete(req: Request) async throws -> HTTPStatus {
-        guard let operatorid: String = req.content["operatorid"] else {
-            throw Abort(.unauthorized, reason: "An operator id is required for delete operation")
-        }
+        let operatorUser = try req.auth.require(User.self)
         
         guard let deletionID = req.parameters.get("id") else {
             throw Abort(.badRequest, reason: "A delete id is required for delete operation")
-        }
-        
-        guard let operatorUUID = UUID(uuidString: operatorid) else {
-            throw Abort(.internalServerError, reason: "operator id passed is not a UUID")
         }
         
         guard let deletionUUID = UUID(uuidString: deletionID) else {
             throw Abort(.internalServerError, reason: "deletion id passed is not a UUID")
         }
         
-        let operatorUser = try await findUser(id: operatorUUID, req: req)
         let deletionUser = try await findUser(id: deletionUUID, req: req)
         
         guard !deletionUser.admin else {
             throw Abort(.badRequest, reason: "Admin user cannot be deleted")
         }
         
-        guard operatorUser.admin == true || operatorid == deletionID else {
+        guard operatorUser.admin == true || operatorUser.id == deletionUUID else {
             throw Abort(.unauthorized, reason: "You don't have permisson to delete user.")
         }
         try await deletionUser.delete(on: req.db)
