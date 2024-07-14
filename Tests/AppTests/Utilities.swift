@@ -66,9 +66,7 @@ extension XCTestCase {
             as: databaseId
         )
         app.databases.default(to: databaseId)
-        let testDB = app.db(databaseId) as! PostgresDatabase
-        try await initService(testDB)
-        try await app.autoMigrate().get()
+        try await app.autoMigrate()
         return app
     }
     

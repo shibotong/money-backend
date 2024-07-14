@@ -8,6 +8,7 @@
 import Foundation
 import Vapor
 import Fluent
+import SQLKit
 
 final class User: Model, Content, Authenticatable {
     
@@ -28,6 +29,9 @@ final class User: Model, Content, Authenticatable {
     @Field(key: "admin")
     var admin: Bool
     
+    @Timestamp(key: "created_at", on: .create)
+    var createAt: Date?
+    
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?
     
@@ -39,5 +43,25 @@ final class User: Model, Content, Authenticatable {
         self.password = password
         self.currency = currency
         self.admin = admin
+    }
+}
+
+extension User: AsyncMigration {
+    func prepare(on database: any Database) async throws {
+        try await database.schema(Self.schema)
+            .id()
+            .field("username", .string, .required)
+            .unique(on: "username")
+            .field("password", .string, .required)
+            .field("currency", .string)
+            .field("admin", .bool, .required, .sql(.default(false)))
+            .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
+            .field("deleted_at", .datetime)
+            .ignoreExisting()
+            .create()
+    }
+    
+    func revert(on database: any Database) async throws {
+        try await database.schema(Self.schema).delete()
     }
 }

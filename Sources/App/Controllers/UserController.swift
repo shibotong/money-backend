@@ -24,7 +24,9 @@ struct UserController: RouteCollection {
     ///`{ "username": String, "password": String }`
     ///`POST: /api/users`
     @Sendable func create(req: Request) async throws -> String {
-        guard let username: String = req.content["username"], let password: String = req.content["password"] else {
+        guard let username: String = req.content["username"],
+                let password: String = req.content["password"],
+              (!username.isOnlySpacesOrEmpty && !password.isOnlySpacesOrEmpty) else {
             throw Abort(.badRequest, reason: "Username or password should not be empty")
         }
         

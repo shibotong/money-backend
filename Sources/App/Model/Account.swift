@@ -1,8 +1,8 @@
 //
-//  Category.swift
+//  Account.swift
 //
 //
-//  Created by Shibo Tong on 5/7/2024.
+//  Created by Shibo Tong on 14/7/2024.
 //
 
 import Foundation
@@ -10,21 +10,21 @@ import Vapor
 import Fluent
 import SQLKit
 
-final class Category: Model, Content {
+final class Account: Model, Content {
     
-    static let schema = "category"
+    static let schema = "account"
     
     @ID(custom: "id", generatedBy: .database)
     var id: Int?
     
-    @Field(key: "category_name")
-    var categoryName: String
+    @Field(key: "account_name")
+    var accountName: String
+    
+    @Field(key: "currency")
+    var currency: String
     
     @Field(key: "bookid")
     var bookid: Int?
-    
-    @Field(key: "parent_category_id")
-    var parentCategoryID: Int?
     
     @Timestamp(key: "created_at", on: .create)
     var createAt: Date?
@@ -34,22 +34,22 @@ final class Category: Model, Content {
     
     init() {}
     
-    init(id: Int? = nil, name: String, bookid: Int? = nil, parentCategoryID: Int? = nil) {
+    init(id: Int? = nil, name: String, currency: String, bookid: Int? = nil) {
         self.id = id
-        self.categoryName = name
+        self.accountName = name
+        self.currency = currency
         self.bookid = bookid
-        self.parentCategoryID = parentCategoryID
     }
 }
 
 
-extension Category: AsyncMigration {
+extension Account: AsyncMigration {
     func prepare(on database: any Database) async throws {
         try await database.schema(Self.schema)
             .field("id", .int, .identifier(auto: true))
-            .field("category_name", .string, .required)
+            .field("account_name", .string, .required)
+            .field("currency", .string, .required)
             .field("bookid", .int, .required, .references("book", "id"))
-            .field("parent_category_id", .int, .references("category", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)
             .ignoreExisting()

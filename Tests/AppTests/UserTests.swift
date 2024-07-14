@@ -5,7 +5,6 @@ import FluentPostgresDriver
 final class UserTests: XCTestCase {
     var app: Application!
     var databaseName: String!
-    var databaseId: DatabaseID { DatabaseID(string: databaseName) }
     var dbUserName: String!
     
     var username: String!
@@ -52,6 +51,18 @@ final class UserTests: XCTestCase {
             userid2 = res.body.string
         })
         
+        try await self.app.test(.POST, "api/users", beforeRequest: { req in
+            try req.content.encode(["username": "", "password": password2])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .badRequest)
+        })
+        
+        try await self.app.test(.POST, "api/users", beforeRequest: { req in
+            try req.content.encode(["username": username2, "password": password2])
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .conflict)
+        })
+        
         
         // fetch user 1
         try await self.app.test(.GET, "api/users/\(userid!)") { res async throws in
@@ -92,6 +103,10 @@ final class UserTests: XCTestCase {
               let userID2 = try await createUser(username: "deleteUser2", password: "deletePass2") else {
             XCTFail()
             return
+        }
+        
+        try await self.app.test(.DELETE, "api/users/abc", headers: authorization(token: userID)) { res async throws in
+            XCTAssertEqual(res.status, .internalServerError, "A UUID is required for deletion")
         }
         
         try await self.app.test(.DELETE, "api/users/\(userID2)", headers: authorization(token: userID)) { res async throws in
