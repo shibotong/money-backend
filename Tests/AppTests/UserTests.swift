@@ -106,7 +106,7 @@ final class UserTests: XCTestCase {
         }
         
         try await self.app.test(.DELETE, "api/users/abc", headers: authorization(token: userID)) { res async throws in
-            XCTAssertEqual(res.status, .internalServerError, "A UUID is required for deletion")
+            XCTAssertEqual(res.status, .badRequest, "A UUID is required for deletion")
         }
         
         try await self.app.test(.DELETE, "api/users/\(userID2)", headers: authorization(token: userID)) { res async throws in

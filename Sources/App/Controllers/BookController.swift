@@ -16,6 +16,7 @@ struct BookController: RouteCollection {
         
         try books.grouped(UserAuthenticator()).group(":id") { book throws in
             book.put(use: update)
+            book.delete(use: delete)
         }
     }
 
@@ -74,40 +75,20 @@ struct BookController: RouteCollection {
 //        return try jsonString(result)
 //    }
 
-
-
-//    ///Delete a user based on userid
-//    ///Only admin user or user self can delete user
-//    ///Delete operation is soft delete
-//    @Sendable func delete(req: Request) async throws -> HTTPStatus {
-//        let operatorUser = try req.auth.require(User.self)
-//        
-//        guard let deletionID = req.parameters.get("id") else {
-//            throw Abort(.badRequest, reason: "A delete id is required for delete operation")
-//        }
-//        
-//        guard let deletionUUID = UUID(uuidString: deletionID) else {
-//            throw Abort(.internalServerError, reason: "deletion id passed is not a UUID")
-//        }
-//        
-//        let deletionUser = try await findUser(id: deletionUUID, req: req)
-//        
-//        guard !deletionUser.admin else {
-//            throw Abort(.badRequest, reason: "Admin user cannot be deleted")
-//        }
-//        
-//        guard operatorUser.admin == true || operatorUser.id == deletionUUID else {
-//            throw Abort(.unauthorized, reason: "You don't have permisson to delete user.")
-//        }
-//        try await deletionUser.delete(on: req.db)
-//        return .ok
-//    }
-//        
-//    private func findUser(id: UUID, req: Request) async throws -> User {
-//        guard let user = try await User.find(id, on: req.db) else {
-//            throw Abort(.notFound, reason: "User not found")
-//        }
-//        return user
-//    }
+    ///Delete a book based on userid
+    @Sendable func delete(req: Request) async throws -> HTTPStatus {
+        let operatorUser = try req.auth.require(User.self)
+        
+        guard let book = try await Book.find(req.parameters.get("id"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        guard book.userid == operatorUser.id else {
+            throw Abort(.unauthorized)
+        }
+        
+        try await book.delete(on: req.db)
+        return .ok
+    }
 }
 

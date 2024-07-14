@@ -110,4 +110,26 @@ final class BookTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         })
     }
+    
+    func testDeleteBook() async throws {
+        var bookID: Int?
+        try await self.app.test(.POST, "api/book", headers: authorization(token: userid), beforeRequest: { req async throws in
+            try req.content.encode(["name": "book 1"])
+        }) { res in
+            let book = try res.content.decode(Book.self)
+            bookID = book.id
+        }
+        
+        try await self.app.test(.DELETE, "api/book/10", headers: authorization(token: userid2)) { res async throws in
+            XCTAssertEqual(res.status, .notFound)
+        }
+        
+        try await self.app.test(.DELETE, "api/book/\(bookID!)", headers: authorization(token: userid2)) { res async throws in
+            XCTAssertEqual(res.status, .unauthorized)
+        }
+        
+        try await self.app.test(.DELETE, "api/book/\(bookID!)", headers: authorization(token: userid)) { res async throws in
+            XCTAssertEqual(res.status, .ok)
+        }
+    }
 }
