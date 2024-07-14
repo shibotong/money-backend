@@ -16,7 +16,4 @@ struct UserAuthenticator: AsyncBearerAuthenticator {
         }
         request.auth.login(user)
     }
-    
-    
-    
 }

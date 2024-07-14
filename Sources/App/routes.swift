@@ -12,6 +12,7 @@ func routes(_ app: Application) throws {
     
     // register users endpoint
     try apis.register(collection: UserController())
+    try apis.register(collection: BookController())
 //    try apis.register(collection: CategoryController())
     
     //MARK: Currencies

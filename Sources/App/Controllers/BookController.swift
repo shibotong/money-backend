@@ -29,9 +29,7 @@ struct BookController: RouteCollection {
             throw Abort(.badRequest, reason: "Book name should not be empty")
         }
         
-        guard let userID = try req.auth.require(User.self).id else {
-            throw Abort(.unauthorized, reason: "A userid is required for creating book")
-        }
+        let userID = try req.auth.require(User.self).id!
         
         let book = Book(name: bookName, userid: userID)
 

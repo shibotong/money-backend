@@ -80,12 +80,9 @@ struct UserController: RouteCollection {
     @Sendable func delete(req: Request) async throws -> HTTPStatus {
         let operatorUser = try req.auth.require(User.self)
         
-        guard let deletionID = req.parameters.get("id") else {
-            throw Abort(.badRequest, reason: "A delete id is required for delete operation")
-        }
-        
-        guard let deletionUUID = UUID(uuidString: deletionID) else {
-            throw Abort(.internalServerError, reason: "deletion id passed is not a UUID")
+        guard let deletionID = req.parameters.get("id"),
+              let deletionUUID = UUID(uuidString: deletionID) else {
+            throw Abort(.badRequest, reason: "A deletion ID should be UUID")
         }
         
         let deletionUser = try await findUser(id: deletionUUID, req: req)
