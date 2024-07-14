@@ -14,10 +14,9 @@ struct BookController: RouteCollection {
         let books = routes.grouped(UserAuthenticator()).grouped("book")
         books.post(use: create)
         
-//        try books.grouped(UserAuthenticator()).group(":id") { book throws in
-//            book.get(use: show)
-//            book.delete(use: delete)
-//        }
+        try books.grouped(UserAuthenticator()).group(":id") { book throws in
+            book.put(use: update)
+        }
     }
 
     ///Create book
@@ -38,6 +37,28 @@ struct BookController: RouteCollection {
         return book
     }
     
+    ///Update book name
+    ///`{ "name": String }`
+    @Sendable func update(req: Request) async throws -> Book {
+        guard let book = try await Book.find(req.parameters.get("id"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        let user = try req.auth.require(User.self)
+        guard user.id == book.userid else {
+            throw Abort(.unauthorized, reason: "You can only update book name for yourself")
+        }
+        
+        guard let bookName: String = req.content["name"],
+              !bookName.isOnlySpacesOrEmpty else {
+            throw Abort(.badRequest, reason: "Book name should not be empty")
+        }
+        
+        book.bookName = bookName
+        try await book.save(on: req.db)
+        return book
+    }
+    
 //    @Sendable func show(req: Request) async throws -> String {
 //        guard let userid = req.parameters.get("id"),
 //              let uuid = UUID(uuidString: userid) else {
@@ -53,17 +74,7 @@ struct BookController: RouteCollection {
 //        return try jsonString(result)
 //    }
 
-//    ///Update password
-//    ///`{ "original": String, "new": String }`
-//    @Sendable func update(req: Request) async throws -> String {
-//        guard let todo = try await Todo.find(req.parameters.get("id"), on: req.db) else {
-//            throw Abort(.notFound)
-//        }
-//        let updatedTodo = try req.content.decode(Todo.self)
-//        todo.title = updatedTodo.title
-//        try await todo.save(on: req.db)
-//        return todo
-//    }
+
 
 //    ///Delete a user based on userid
 //    ///Only admin user or user self can delete user

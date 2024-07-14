@@ -10,7 +10,7 @@ import Vapor
 import Fluent
 import SQLKit
 
-final class Account: Model, Content {
+final class Account: Model, Content, @unchecked Sendable {
     
     static let schema = "account"
     
