@@ -20,8 +20,14 @@ final class Category: Model, Content, @unchecked Sendable {
     @Field(key: "category_name")
     var categoryName: String
     
-    @Parent(key: "category_group_id")
-    var categoryGroup: CategoryGroup
+    @Field(key: "is_expense")
+    var isExpense: Bool
+    
+    @Parent(key: "book_id")
+    var book: Book
+    
+    @OptionalParent(key: "category_group_id")
+    var categoryGroup: CategoryGroup?
     
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -34,11 +40,18 @@ final class Category: Model, Content, @unchecked Sendable {
     
     init() {}
     
-    init(id: Int? = nil, name: String, categoryGroupID: Int) {
+    init(id: Int? = nil, name: String, isExpense: Bool, bookID: Int, categoryGroupID: Int? = nil) {
         self.id = id
         self.categoryName = name
+        self.isExpense = isExpense
+        
+        self.$book.id = bookID
         self.$categoryGroup.id = categoryGroupID
     }
+    
+    static let defaultExpense = ["Miscellaneous", "Education", "Entertainment", "Insurance"]
+    
+    static let defaultIncome = ["Salary", "Interest", "Dividend", "Other"]
 }
 
 
@@ -47,7 +60,9 @@ extension Category: AsyncMigration {
         try await database.schema(Self.schema)
             .field("id", .int, .identifier(auto: true))
             .field("category_name", .string, .required)
-            .field("parent_category_id", .int, .references("category", "id"))
+            .field("is_expense", .bool, .required)
+            .field("book_id", .int, .references("book", "id"))
+            .field("category_group_id", .int, .references("category_group", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)

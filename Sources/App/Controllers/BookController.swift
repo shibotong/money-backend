@@ -14,9 +14,10 @@ struct BookController: RouteCollection {
         let books = routes.grouped(UserAuthenticator()).grouped("book")
         books.post(use: create)
         
-        try books.grouped(UserAuthenticator()).group(":id") { book throws in
+        try books.grouped(UserAuthenticator()).group(":bookid") { book throws in
             book.put(use: update)
             book.delete(use: delete)
+            try book.register(collection: AccountController())
         }
     }
 
@@ -29,11 +30,9 @@ struct BookController: RouteCollection {
             throw Abort(.badRequest, reason: "Book name should not be empty")
         }
         
-        let userID = try req.auth.require(User.self).id!
+        let user = try req.auth.require(User.self)
         
-        let book = Book(name: bookName, userid: userID)
-
-        try await book.create(on: req.db)
+        let book = try await Book.createNewBook(name: bookName, user: user, database: req.db)
         
         return book
     }
@@ -41,7 +40,7 @@ struct BookController: RouteCollection {
     ///Update book name
     ///`{ "name": String }`
     @Sendable func update(req: Request) async throws -> Book {
-        guard let book = try await Book.find(req.parameters.get("id"), on: req.db) else {
+        guard let book = try await Book.find(req.parameters.get("bookid"), on: req.db) else {
             throw Abort(.notFound)
         }
         
@@ -79,7 +78,7 @@ struct BookController: RouteCollection {
     @Sendable func delete(req: Request) async throws -> HTTPStatus {
         let operatorUser = try req.auth.require(User.self)
         
-        guard let book = try await Book.find(req.parameters.get("id"), on: req.db) else {
+        guard let book = try await Book.find(req.parameters.get("bookid"), on: req.db) else {
             throw Abort(.notFound)
         }
         

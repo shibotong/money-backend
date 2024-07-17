@@ -20,6 +20,7 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(User())
     app.migrations.add(Book())
     app.migrations.add(Account())
+    app.migrations.add(CategoryGroup())
     app.migrations.add(Category())
     app.migrations.add(Transaction())
     app.migrations.add(TransactionDetail())
