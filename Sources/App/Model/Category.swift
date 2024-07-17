@@ -20,11 +20,8 @@ final class Category: Model, Content, @unchecked Sendable {
     @Field(key: "category_name")
     var categoryName: String
     
-    @Field(key: "book_id")
-    var bookid: Int?
-    
-    @Field(key: "parent_category_id")
-    var parentCategoryID: Int?
+    @Parent(key: "category_group_id")
+    var categoryGroup: CategoryGroup
     
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -37,11 +34,10 @@ final class Category: Model, Content, @unchecked Sendable {
     
     init() {}
     
-    init(id: Int? = nil, name: String, bookid: Int? = nil, parentCategoryID: Int? = nil) {
+    init(id: Int? = nil, name: String, categoryGroupID: Int) {
         self.id = id
         self.categoryName = name
-        self.bookid = bookid
-        self.parentCategoryID = parentCategoryID
+        self.$categoryGroup.id = categoryGroupID
     }
 }
 
@@ -51,7 +47,6 @@ extension Category: AsyncMigration {
         try await database.schema(Self.schema)
             .field("id", .int, .identifier(auto: true))
             .field("category_name", .string, .required)
-            .field("book_id", .int, .required, .references("book", "id"))
             .field("parent_category_id", .int, .references("category", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))

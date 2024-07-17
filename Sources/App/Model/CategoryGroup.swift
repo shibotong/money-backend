@@ -1,8 +1,8 @@
 //
-//  TransactionDetailSplit.swift
-//  
+//  CategoryGroup.swift
 //
-//  Created by Shibo Tong on 14/7/2024.
+//
+//  Created by Shibo Tong on 17/7/2024.
 //
 
 import Foundation
@@ -10,21 +10,21 @@ import Vapor
 import Fluent
 import SQLKit
 
-final class TransactionDetailSplit: Model, Content, @unchecked Sendable {
+final class CategoryGroup: Model, Content, @unchecked Sendable {
     
-    static let schema = "transaction_detail_split"
+    static let schema = "category_group"
     
     @ID(custom: "id", generatedBy: .database)
     var id: Int?
     
-    @Field(key: "category_id")
-    var categoryID: Int
+    @Field(key: "category_group_name")
+    var categoryGroupName: String
     
-    @Field(key: "amount")
-    var amount: Int
+    @Parent(key: "book_id")
+    var book: Book
     
-    @Parent(key: "transaction_detail_id")
-    var transactionDetail: TransactionDetail
+    @Children(for: \.$categoryGroup)
+    var categories: [Category]
     
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -37,24 +37,20 @@ final class TransactionDetailSplit: Model, Content, @unchecked Sendable {
     
     init() {}
     
-    init(id: Int? = nil,
-         categoryID: Int,
-         amount: Int,
-         transactionDetailID: Int) {
+    init(id: Int? = nil, name: String, bookid: Int) {
         self.id = id
-        self.amount = amount
-        self.categoryID = categoryID
-        self.$transactionDetail.id = transactionDetailID
+        self.categoryGroupName = name
+        self.$book.id = bookid
     }
 }
 
-extension TransactionDetailSplit: AsyncMigration {
+
+extension CategoryGroup: AsyncMigration {
     func prepare(on database: any Database) async throws {
         try await database.schema(Self.schema)
             .field("id", .int, .identifier(auto: true))
-            .field("amount", .int, .required)
-            .field("category_id", .int, .required, .references("category", "id"))
-            .field("transaction_detail_id", .int, .references("transaction_detail", "id"))
+            .field("category_group_name", .string, .required)
+            .field("book_id", .int, .required, .references("book", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)

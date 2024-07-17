@@ -23,8 +23,11 @@ final class TransactionDetail: Model, Content, @unchecked Sendable {
     @Field(key: "currency")
     var currency: String
     
-    @Field(key: "transaction_id")
-    var transactionID: Int?
+    @Parent(key: "transaction_id")
+    var transaction: Transaction
+    
+    @Children(for: \.$transactionDetail)
+    var transactionDetailSplits: [TransactionDetailSplit]
     
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -40,11 +43,11 @@ final class TransactionDetail: Model, Content, @unchecked Sendable {
     init(id: Int? = nil,
          amount: Int,
          currency: String,
-         transactionID: Int? = nil) {
+         transactionID: Int) {
         self.id = id
         self.amount = amount
         self.currency = currency
-        self.transactionID = transactionID
+        self.$transaction.id = transactionID
     }
 }
 

@@ -17,8 +17,11 @@ final class Transaction: Model, Content, @unchecked Sendable {
     @ID(custom: "id", generatedBy: .database)
     var id: Int?
     
-    @Field(key: "book_id")
-    var bookid: Int?
+    @Parent(key: "book_id")
+    var book: Book
+    
+    @Children(for: \.$transaction)
+    var transactionDetails: [TransactionDetail]
     
     @Field(key: "latitude")
     var latitude: Float?
@@ -44,13 +47,13 @@ final class Transaction: Model, Content, @unchecked Sendable {
     init() {}
     
     init(id: Int? = nil,
-         bookid: Int? = nil,
+         bookid: Int,
          latitude: Float? = nil,
          longitude: Float? = nil,
          description: String? = nil,
          type: TransactionType) {
         self.id = id
-        self.bookid = bookid
+        self.$book.id = bookid
         self.latitude = latitude
         self.longitude = longitude
         self.description = description

@@ -26,6 +26,12 @@ final class Book: Model, Content, @unchecked Sendable {
     @Children(for: \.$book)
     var accounts: [Account]
     
+    @Children(for: \.$book)
+    var categoryGroups: [CategoryGroup]
+    
+    @Children(for: \.$book)
+    var transactions: [Transaction]
+    
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     
