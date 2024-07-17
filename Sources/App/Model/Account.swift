@@ -23,22 +23,25 @@ final class Account: Model, Content, @unchecked Sendable {
     @Field(key: "currency")
     var currency: String
     
-    @Field(key: "bookid")
-    var bookid: Int?
+    @Parent(key: "book_id")
+    var book: Book
     
     @Timestamp(key: "created_at", on: .create)
-    var createAt: Date?
+    var createdAt: Date?
+    
+    @Timestamp(key: "updated_at", on: .update)
+    var updatedAt: Date?
     
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?
     
     init() {}
     
-    init(id: Int? = nil, name: String, currency: String, bookid: Int? = nil) {
+    init(id: Int? = nil, name: String, currency: String, bookid: Int) {
         self.id = id
         self.accountName = name
         self.currency = currency
-        self.bookid = bookid
+        self.$book.id = bookid
     }
 }
 
@@ -49,8 +52,9 @@ extension Account: AsyncMigration {
             .field("id", .int, .identifier(auto: true))
             .field("account_name", .string, .required)
             .field("currency", .string, .required)
-            .field("bookid", .int, .required, .references("book", "id"))
+            .field("book_id", .int, .required, .references("book", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
+            .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)
             .ignoreExisting()
             .create()

@@ -20,14 +20,17 @@ final class Category: Model, Content, @unchecked Sendable {
     @Field(key: "category_name")
     var categoryName: String
     
-    @Field(key: "bookid")
+    @Field(key: "book_id")
     var bookid: Int?
     
     @Field(key: "parent_category_id")
     var parentCategoryID: Int?
     
     @Timestamp(key: "created_at", on: .create)
-    var createAt: Date?
+    var createdAt: Date?
+    
+    @Timestamp(key: "updated_at", on: .update)
+    var updatedAt: Date?
     
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?
@@ -48,9 +51,10 @@ extension Category: AsyncMigration {
         try await database.schema(Self.schema)
             .field("id", .int, .identifier(auto: true))
             .field("category_name", .string, .required)
-            .field("bookid", .int, .required, .references("book", "id"))
+            .field("book_id", .int, .required, .references("book", "id"))
             .field("parent_category_id", .int, .references("category", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
+            .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)
             .ignoreExisting()
             .create()

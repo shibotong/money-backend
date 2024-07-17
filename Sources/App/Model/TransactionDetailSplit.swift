@@ -27,7 +27,10 @@ final class TransactionDetailSplit: Model, Content, @unchecked Sendable {
     var transactionDetailID: Int?
     
     @Timestamp(key: "created_at", on: .create)
-    var createAt: Date?
+    var createdAt: Date?
+    
+    @Timestamp(key: "updated_at", on: .update)
+    var updatedAt: Date?
     
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?
@@ -53,6 +56,7 @@ extension TransactionDetailSplit: AsyncMigration {
             .field("category_id", .int, .required, .references("category", "id"))
             .field("transaction_detail_id", .int, .references("transaction_detail", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
+            .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)
             .ignoreExisting()
             .create()

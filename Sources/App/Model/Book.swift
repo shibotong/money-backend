@@ -23,8 +23,14 @@ final class Book: Model, Content, @unchecked Sendable {
     @Field(key: "userid")
     var userid: UUID
     
+    @Children(for: \.$book)
+    var accounts: [Account]
+    
     @Timestamp(key: "created_at", on: .create)
-    var createAt: Date?
+    var createdAt: Date?
+    
+    @Timestamp(key: "updated_at", on: .update)
+    var updatedAt: Date?
     
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?
@@ -46,6 +52,7 @@ extension Book: AsyncMigration {
             .field("book_name", .string, .required)
             .field("userid", .uuid, .required, .references("users", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
+            .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)
             .ignoreExisting()
             .create()

@@ -17,7 +17,7 @@ final class Transaction: Model, Content, @unchecked Sendable {
     @ID(custom: "id", generatedBy: .database)
     var id: Int?
     
-    @Field(key: "bookid")
+    @Field(key: "book_id")
     var bookid: Int?
     
     @Field(key: "latitude")
@@ -33,7 +33,10 @@ final class Transaction: Model, Content, @unchecked Sendable {
     var type: String
     
     @Timestamp(key: "created_at", on: .create)
-    var createAt: Date?
+    var createdAt: Date?
+    
+    @Timestamp(key: "updated_at", on: .update)
+    var updatedAt: Date?
     
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?
@@ -63,12 +66,13 @@ extension Transaction: AsyncMigration {
     func prepare(on database: any Database) async throws {
         try await database.schema(Self.schema)
             .field("id", .int, .identifier(auto: true))
-            .field("bookid", .int, .required, .references("book", "id"))
+            .field("book_id", .int, .required, .references("book", "id"))
             .field("latitude", .float)
             .field("longitude", .float)
             .field("description", .string)
             .field("type", .string, .required)
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
+            .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)
             .ignoreExisting()
             .create()

@@ -27,7 +27,10 @@ final class TransactionDetail: Model, Content, @unchecked Sendable {
     var transactionID: Int?
     
     @Timestamp(key: "created_at", on: .create)
-    var createAt: Date?
+    var createdAt: Date?
+    
+    @Timestamp(key: "updated_at", on: .update)
+    var updatedAt: Date?
     
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?
@@ -53,6 +56,7 @@ extension TransactionDetail: AsyncMigration {
             .field("currency", .int, .required)
             .field("transaction_id", .int, .references("transaction", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
+            .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)
             .ignoreExisting()
             .create()

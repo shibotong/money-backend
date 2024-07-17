@@ -30,7 +30,10 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     var admin: Bool
     
     @Timestamp(key: "created_at", on: .create)
-    var createAt: Date?
+    var createdAt: Date?
+    
+    @Timestamp(key: "updated_at", on: .update)
+    var updatedAt: Date?
     
     @Timestamp(key: "deleted_at", on: .delete)
     var deletedAt: Date?
@@ -56,6 +59,7 @@ extension User: AsyncMigration {
             .field("currency", .string)
             .field("admin", .bool, .required, .sql(.default(false)))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
+            .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)
             .ignoreExisting()
             .create()
