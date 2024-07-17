@@ -91,3 +91,21 @@ extension Transaction: AsyncMigration {
         try await database.schema(Self.schema).delete()
     }
 }
+
+struct TransactionModel: Decodable {
+    var latitude: Float?
+    var longitude: Float?
+    var description: String?
+    var type: String
+    var date: Date
+    var transactionDetails: [TransactionDetailModel]
+    
+    enum CodingKeys: String, CodingKey {
+        case latitude
+        case longitude
+        case description
+        case type
+        case date
+        case transactionDetails = "transaction_details"
+    }
+}

@@ -44,8 +44,12 @@ struct TransactionController: RouteCollection {
         guard let bookID: Int = req.parameters.get("bookid") else {
             throw Abort(.badRequest, reason: "Account name should not be empty")
         }
+//        guard let type: String = req.content["type"],
+//              let date: Date = req.content["date"] else {
+//            throw Abort(.badRequest, reason: "type and date should not be empty")
+//        }
         
-        let transaction = try req.content.decode(Transaction.self)
+        let transaction = try req.content.decode(TransactionModel.self)
         print(transaction)
         
         return "abc"

@@ -66,3 +66,13 @@ extension TransactionDetailSplit: AsyncMigration {
         try await database.schema(Self.schema).delete()
     }
 }
+
+struct TransactionDetailSplitModel: Decodable {
+    var categoryID: Int
+    var amount: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case categoryID = "category_id"
+        case amount
+    }
+}

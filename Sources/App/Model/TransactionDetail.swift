@@ -69,3 +69,15 @@ extension TransactionDetail: AsyncMigration {
         try await database.schema(Self.schema).delete()
     }
 }
+
+struct TransactionDetailModel: Decodable {
+    var amount: Int
+    var account: Int?
+    var transactionDetailSplits: [TransactionDetailSplitModel]?
+    
+    enum CodingKeys: String, CodingKey {
+        case amount
+        case account
+        case transactionDetailSplits = "transaction_detail_splits"
+    }
+}
