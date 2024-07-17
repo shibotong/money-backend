@@ -26,6 +26,9 @@ final class Account: Model, Content, @unchecked Sendable {
     @Parent(key: "book_id")
     var book: Book
     
+    @Children(for: \.$account)
+    var transactionDetails: [TransactionDetail]
+    
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     

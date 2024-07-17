@@ -18,6 +18,7 @@ struct BookController: RouteCollection {
             book.put(use: update)
             book.delete(use: delete)
             try book.register(collection: AccountController())
+            try book.register(collection: TransactionController())
         }
     }
 
@@ -42,11 +43,6 @@ struct BookController: RouteCollection {
     @Sendable func update(req: Request) async throws -> Book {
         guard let book = try await Book.find(req.parameters.get("bookid"), on: req.db) else {
             throw Abort(.notFound)
-        }
-        
-        let user = try req.auth.require(User.self)
-        guard user.id == book.userid else {
-            throw Abort(.unauthorized, reason: "You can only update book name for yourself")
         }
         
         guard let bookName: String = req.content["name"],

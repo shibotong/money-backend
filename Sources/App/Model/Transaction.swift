@@ -35,6 +35,9 @@ final class Transaction: Model, Content, @unchecked Sendable {
     @Field(key: "type")
     var type: String
     
+    @Field(key: "transaction_date")
+    var date: Date
+    
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     
@@ -51,13 +54,15 @@ final class Transaction: Model, Content, @unchecked Sendable {
          latitude: Float? = nil,
          longitude: Float? = nil,
          description: String? = nil,
-         type: TransactionType) {
+         type: TransactionType,
+         date: Date) {
         self.id = id
         self.$book.id = bookid
         self.latitude = latitude
         self.longitude = longitude
         self.description = description
         self.type = type.rawValue
+        self.date = date
     }
 }
 
@@ -74,6 +79,7 @@ extension Transaction: AsyncMigration {
             .field("longitude", .float)
             .field("description", .string)
             .field("type", .string, .required)
+            .field("transaction_date", .datetime, .required)
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("deleted_at", .datetime)

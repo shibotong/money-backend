@@ -20,8 +20,8 @@ final class TransactionDetail: Model, Content, @unchecked Sendable {
     @Field(key: "amount")
     var amount: Int
     
-    @Field(key: "currency")
-    var currency: String
+    @OptionalParent(key: "account_id")
+    var account: Account?
     
     @Parent(key: "transaction_id")
     var transaction: Transaction
@@ -42,12 +42,12 @@ final class TransactionDetail: Model, Content, @unchecked Sendable {
     
     init(id: Int? = nil,
          amount: Int,
-         currency: String,
-         transactionID: Int) {
+         transactionID: Int,
+         accountID: Int? = nil) {
         self.id = id
         self.amount = amount
-        self.currency = currency
         self.$transaction.id = transactionID
+        self.$account.id = accountID
     }
 }
 
@@ -56,7 +56,7 @@ extension TransactionDetail: AsyncMigration {
         try await database.schema(Self.schema)
             .field("id", .int, .identifier(auto: true))
             .field("amount", .int, .required)
-            .field("currency", .int, .required)
+            .field("account_id", .int, .references("account", "id"))
             .field("transaction_id", .int, .references("transaction", "id"))
             .field("created_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
             .field("updated_at", .datetime, .required, .sql(.default(SQLFunction("now"))))
